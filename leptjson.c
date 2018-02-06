@@ -1,8 +1,12 @@
 #include "leptjson.h"
-#include <assert.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <math.h>
+#include <assert.h>     // assert
+#include <stdlib.h>     // NULL, malloc(), realloc(), free(), strtod()
+#include <errno.h>      // errno, ERANGE
+#include <math.h>       // HUGE_VAL
+#include <string.h>     // memcpy
+
+#ifndef LEPT_PARSE_STACK_INIT_SIZE
+#define LEPT_PARSE_STACK_INIT_SIZE 256
 
 #define EXPECT(c, ch)\
         do {\
@@ -15,7 +19,29 @@
 
 typedef struct {
     const char *json;
+    char *stack;
+    size_t size, top;
 }lept_context;
+
+static void *lept_context_push(lept_context *c, size_t size) {
+    void *ret;
+    assert(size > 0);
+    if (c->top + size >= c->size) {
+        if (c->size == 0)
+            c->size = LEPT_PARSE_STACK_INIT_SIZE;
+        while (c->top + size >= c->size)
+            c->size += c->size >> 1;
+        c->stack = (char *)realloc(c->stack, c->size);
+    }
+    ret = c->stack + c->top;
+    c->top += size;
+    return ret;
+}
+
+static void *lept_context_pop(lept_context *c, size_t size) {
+    assert(c->top >= size);
+    return c->stack + (c->top -= size);
+}
 
 /* 跳过ws，%x20 / %x09 / %x0A / %x0D */
 static void lept_parse_whitespace(lept_context* c) {
@@ -80,7 +106,9 @@ int lept_parse(lept_value *v, const char *json) {
     int ret;
     assert(v != NULL);
     c.json = json;
-    v->type = LEPT_NULL;
+    c.stack = NULL;
+    c.size = c.top = 0;
+    lept_init(&v);
     // ws
     lept_parse_whitespace(&c);
     // value
@@ -90,6 +118,8 @@ int lept_parse(lept_value *v, const char *json) {
         if (*c.json != '\0')
             ret = LEPT_PARSE_ROOT_NOT_SINGULAR;
     }
+    assert(c.top == 0);
+    free(c.stack);
     return ret;
 }
 
@@ -103,4 +133,21 @@ lept_type lept_get_type(const lept_value *v) {
 double lept_get_number(const lept_value *v) {
     assert(v != NULL && v->type == LEPT_NUMBER);
     return v->n;
+}
+
+void lept_free(lept_value *v) {
+    assert(v != NULL);
+    if (v->type == LEPT_STRING)
+        free(v->u.s.s);
+    v->type = LEPT_NULL;
+}
+
+void lept_set_string(lept_value *v, const char *s, size_t len) {
+    assert(v != NULL && (s != NULL || len == 0));
+    lept_free(v);
+    v->u.s.s = (char *)malloc(len + 1);
+    memcpy(v->u.s.s, s, len);
+    v->u.s.s[len] = '\0';
+    v->u.s.len = len;
+    v->type = LEPT_STRING;
 }
