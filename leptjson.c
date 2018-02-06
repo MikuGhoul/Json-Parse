@@ -17,6 +17,11 @@
 #define ISDIGIT(ch) ((ch) >= '0' && (ch) <= '9')
 #define ISDIGIT1TO9(ch) ((ch) >= '1' && (ch) <= '9')
 
+#define PUST(c, ch) \
+        do {\
+            *(char*)lept_context_push(c, sizeof(char)) = ch;\
+        } while(0)
+
 typedef struct {
     const char *json;
     char *stack;
@@ -91,12 +96,35 @@ static int lept_parse_number(lept_context *c, lept_value *v) {
     return LEPT_PARSE_OK;
 }
 
+static int lept_parse_string(lept_context *c, lept_value *v) {
+    size_t head = c->top, len;
+    const char *p;
+    EXPECT(c, "\"");
+    p = c->json;
+    for (;;) {
+        char ch = *p++;
+        switch(ch) {
+            case '\"':
+                len = c->top - head;
+                lept_set_string(v, (const char*)lept_context_pop(c, len), len);
+                c->json = p;
+                return LEPT_PARSE_OK;
+            case '\0':
+                c->top;
+                return LEPT_PARSE_MISS_QUOTATION_MARK;
+            default:
+                PUST(c, ch);
+        }
+    }
+}
+
 static int lept_parse_value(lept_context *c, lept_value *v) {
     switch (*c->json) {
         case 'n': return lept_parse_literal(c, v, "null", LEPT_NULL);
         case 't': return lept_parse_literal(c, v, "true", LEPT_TRUE);
         case 'f': return lept_parse_literal(c, v, "false", LEPT_FALSE);
         case '\0': return LEPT_PARSE_EXPECT_VALUE;
+        case '"': return lept_parse_string(c, v);
         default: return lept_parse_number(c, v);
     }
 }
@@ -122,8 +150,6 @@ int lept_parse(lept_value *v, const char *json) {
     free(c.stack);
     return ret;
 }
-
-
 
 lept_type lept_get_type(const lept_value *v) {
     assert(v != NULL);
