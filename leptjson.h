@@ -25,12 +25,14 @@ enum {
     LEPT_PARSE_INVALID_VALUE,
     LEPT_PARSE_ROOT_NOT_SINGULAR,
     LEPT_PARSE_NUMBER_TOO_BIG,
-    LEPT_PARSE_MISS_QUOTATION_MARK
+    LEPT_PARSE_MISS_QUOTATION_MARK,
+    LEPT_PARSE_INVALID_STRING_ESCAPE,
+    LEPT_PARSE_INVALID_STRING_CHAR
 };
 
 #define lept_init(v) \
         do {\
-            v->type = LEPT_NULL;\
+            (v)->type = LEPT_NULL;\
         }while(0)
 
 int lept_parse(lept_type *v, const char *json);
