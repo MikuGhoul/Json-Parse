@@ -192,6 +192,9 @@ static void test_parse() {
     test_parse_string();
     test_parse_missing_quotation_mark();
 
+}
+
+static void test_access() {
     test_access_null();
     test_access_boolean();
     test_access_number();
@@ -204,6 +207,7 @@ int main() {
 #endif // _WINDOWS
 
     test_parse();
+    test_access();
     printf("%d/%d (%3.2f%%) passed\n", test_pass, test_count, test_pass * 100.0 / test_count);
     return main_ret;
 }

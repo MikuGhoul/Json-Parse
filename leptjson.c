@@ -102,9 +102,21 @@ static int lept_parse_number(lept_context *c, lept_value *v) {
     return LEPT_PARSE_OK;
 }
 
+static const char *lept_parse_hex4(const char *p, unsigned *u) {
+    // TODO
+    return p;
+}
+
+static const char *lept_encode_utf8(lept_context *c, unsigned u) {
+    // TODO
+}
+
+#define STRING_ERROR(ret) do { c->top = head; return ret;} while(0)
+
 static int lept_parse_string(lept_context *c, lept_value *v) {
     size_t head = c->top, len;
     const char *p;
+    unsigned u;
     EXPECT(c, '\"');
     p = c->json;
     for (;;) {
@@ -125,18 +137,18 @@ static int lept_parse_string(lept_context *c, lept_value *v) {
                     case 'n': PUST(c, '\n'); break;
                     case 'r': PUST(c, '\r'); break;
                     case 't': PUST(c, '\t'); break;
+                    case 'u':
+                        if (!(p = lept_parse_hex4(p, &u)))
+                            STRING_ERROR(LEPT_PARSE_INVALID_UNICODE_HEX);
+                        lept_encode_utf8(c, u);
                     default:
-                        c->top = head;
-                        return LEPT_PARSE_INVALID_STRING_ESCAPE;
+                        STRING_ERROR(LEPT_PARSE_INVALID_STRING_ESCAPE);
                 }
             case '\0':
-                c->top = head;
-                return LEPT_PARSE_MISS_QUOTATION_MARK;
+                STRING_ERROR(LEPT_PARSE_MISS_QUOTATION_MARK);
             default:
-                if ((unsigned char)ch < 0x20) {
-                    c->top = head;
-                    return LEPT_PARSE_INVALID_STRING_CHAR;
-                }
+                if ((unsigned char)ch < 0x20)
+                    STRING_ERROR(LEPT_PARSE_INVALID_STRING_CHAR);
                 PUST(c, ch);
         }
     }
