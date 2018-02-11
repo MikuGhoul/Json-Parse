@@ -119,12 +119,12 @@ static const char *lept_encode_utf8(lept_context *c, unsigned u) {
     if (u <= 0xFF)
         PUST(c, u & 0xFF);
     else if (u <= 0x7FF) {
-        PUTC(c, 0xC0 | ((u >> 6) & 0xFF));
-        PUTC(c, 0x80 | (u & 0x3F));
+		PUST(c, 0xC0 | ((u >> 6) & 0xFF));
+		PUST(c, 0x80 | (u & 0x3F));
     }
     else if (u <= 0xFFFF) {
-        PUTC(c, 0xE0 | ((u >> 12) & 0xFF));
-        PUTC(c, 0x80 | ((u >> 6) & 0x3F));
+		PUST(c, 0xE0 | ((u >> 12) & 0xFF));
+		PUST(c, 0x80 | ((u >> 6) & 0x3F));
         PUST(c, 0x80 | (u & 0x3F));
     }
     else {
@@ -180,6 +180,7 @@ static int lept_parse_string(lept_context *c, lept_value *v) {
                     default:
                         STRING_ERROR(LEPT_PARSE_INVALID_STRING_ESCAPE);
                 }
+                break;
             case '\0':
                 STRING_ERROR(LEPT_PARSE_MISS_QUOTATION_MARK);
             default:
@@ -267,6 +268,17 @@ void lept_set_string(lept_value *v, const char *s, size_t len) {
 size_t lept_get_string_length(const lept_value *v) {
     assert(v != NULL && v->type == LEPT_STRING);
     return v->u.s.len;
+}
+
+size_t lept_get_array_size(const lept_value *v) {
+    assert(v != NULL && v->type == LEPT_ARRAY);
+    return v->u.a.size;
+}
+
+lept_value *lept_get_array_element(const lept_value *v, size_t index) {
+    assert(v != NULL && v->type == LEPT_ARRAY);
+    assert(index < v->u.a.size);
+    return &v->u.a.e[index];
 }
 
 void lept_free(lept_value *v) {
