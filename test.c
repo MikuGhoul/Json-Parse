@@ -140,6 +140,15 @@ static int test_parse_missing_quotation_mark() {
     TEST_ERROR(LEPT_PARSE_MISS_QUOTATION_MARK, "\"abc");
 }
 
+static void test_parse_array() {
+    lept_value v;
+    lept_init(&v);
+    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[ ]"));
+    EXPECT_EQ_INT(LEPT_ARRAY, lept_get_type(&v));
+    EXPECT_EQ_SIZE_T(0, lept_get_array_size(&v));
+    lept_free(&v);
+}
+
 static void test_parse_expect_value() {
     TEST_ERROR(LEPT_PARSE_EXPECT_VALUE, "");
     TEST_ERROR(LEPT_PARSE_EXPECT_VALUE, " ");
@@ -217,6 +226,7 @@ static void test_parse() {
     test_parse_number_too_big();
     test_parse_string();
     test_parse_missing_quotation_mark();
+    test_parse_array();
 
 }
 
