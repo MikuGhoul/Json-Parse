@@ -143,7 +143,7 @@ static int test_parse_missing_quotation_mark() {
 static void test_parse_array() {
     lept_value v;
     lept_init(&v);
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[ ]"));
+    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[]"));
     EXPECT_EQ_INT(LEPT_ARRAY, lept_get_type(&v));
     EXPECT_EQ_SIZE_T(0, lept_get_array_size(&v));
     lept_free(&v);
