@@ -158,8 +158,8 @@ static void test_parse_array() {
     EXPECT_EQ_INT(LEPT_TRUE, lept_get_type(lept_get_array_element(&v, 2)));
     EXPECT_EQ_INT(LEPT_NUMBER, lept_get_type(lept_get_array_element(&v, 3)));
     EXPECT_EQ_INT(LEPT_STRING, lept_get_type(lept_get_array_element(&v, 4)));
-    EXPECT_EQ_DOUBLE(123.0, lept_get_type(lept_get_array_element(&v, 3)));
-    EXPECT_EQ_STRING("abc", lept_get_type(lept_get_array_element(&v, 4)));
+    EXPECT_EQ_DOUBLE(123.0, lept_get_number(lept_get_array_element(&v, 3)));
+    EXPECT_EQ_STRING("abc", lept_get_string(lept_get_array_element(&v, 4)), lept_get_string_length(lept_get_array_element(&v, 4)));
     lept_free(&v);
 
     lept_init(&v);
@@ -169,11 +169,11 @@ static void test_parse_array() {
     for (size_t i = 0; i < 4; ++i) {
         lept_value *a = lept_get_array_element(&v, i);
         EXPECT_EQ_INT(LEPT_ARRAY, lept_get_type(a));
-        EXPECT_EQ_SIZE_T(i, lept_get_array_element(a));
+        EXPECT_EQ_SIZE_T(i, lept_get_array_size(a));
         for (size_t j = 0; j < i; ++j) {
-            lept_value *e = lept_get_array_element(&v, i);
+            lept_value *e = lept_get_array_element(a, j);
             EXPECT_EQ_INT(LEPT_NUMBER, lept_get_type(e));
-            EXPECT_EQ_DOUBLE((double)i, lept_get_number(e));
+            EXPECT_EQ_DOUBLE((double)j, lept_get_number(e));
         }
     }
     lept_free(&v);
